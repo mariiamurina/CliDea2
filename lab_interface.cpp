@@ -152,3 +152,121 @@ HANDLE open(HANDLE** pSharedMem, const LPSTR& name) {
 
 	return hFileMap;
 }
+void get_ideas(HANDLE& hPipeRead, std::vector<std::string>& _ideas, PCHAR& pSharedMem) {
+  char temp_str[1000];
+  DWORD dwBytesReaden;
+  if (ReadFile(hPipeRead, temp_str, 1000, &dwBytesReaden, NULL)) {
+    //std::string str(temp_str);
+    temp_str[dwBytesReaden] = 0;
+    CopyMemory(pSharedMem + 1, temp_str, strlen(temp_str));  
+    //std::cout << temp_str << "\n\n";
+    into_vector(temp_str, _ideas);
+  }
+  else {
+    std::cout << "\n\nERROR READING PIPE!!!\n\n";
+  }
+}
+
+void into_vector(char temp_str[1000], std::vector<std::string>& _ideas) {
+  int i{ 0 };
+  int j{ 0 };
+  while (temp_str[j] != 0) {
+    if (i != j && temp_str[j] == '\n') {
+      _ideas.push_back(std::string(temp_str + i, j - i));
+      i = j + 1;
+      j = i + 1;
+    }
+    else {
+      ++j;
+    }
+  }
+}
+
+void show_ideas(std::vector<std::string>& _ideas) {
+  for (int i{ 0 }; i < _ideas.size(); ++i) {
+    std::cout << i << ". " << _ideas[i] << "\n";
+  }
+}
+
+bool create_pipe(PHANDLE write_pipe, PHANDLE read_pipe) {
+  SECURITY_ATTRIBUTES saAttr;
+
+  saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+  saAttr.bInheritHandle = TRUE;
+  saAttr.lpSecurityDescriptor = NULL;
+
+  return CreatePipe(
+    read_pipe,
+    write_pipe,
+    &saAttr,
+    0
+  );
+}
+
+void into_vector(char temp_str[1000], std::vector<int>& ranks) {
+  int i{ 0 };
+  int j{ 0 };
+  while (temp_str[j] != 0) {
+    if (i != j && temp_str[j] == '\n') {
+      ++ranks[*(temp_str + i)];
+      i = j + 1;
+      j = i + 1;
+    }
+    else {
+      ++j;
+    }
+  }
+
+  //std::cout << "\n\n";
+  //for (int i{ 0 }; i < ranks.size(); ++i) {
+  //  std::cout << i << " " << ranks[i] << "\n";
+  //}
+  //std::cout << "\n\n";
+}
+
+int min_in_top(int max[3], std::vector<int> ranks) {
+  int num{ 0 };
+
+  if (ranks[max[num]] > ranks[max[1]] && max[num] != max[1]) num = 1;
+  if (ranks[max[num]] > ranks[max[2]] && max[num] != max[2]) num = 2;
+
+  return num;
+}
+
+std::string show_top(std::vector<std::string>& _ideas, std::vector<int>& ranks) {
+  int max[3]{ 0, 1, 2 };
+
+  for (int i{ 0 }; i < ranks.size(); ++i) {
+    if (i == max[0]  i == max[1]  i == max[2])
+      continue;
+
+    else if (ranks[i] > ranks[max[min_in_top(max, ranks)]]) {
+      max[min_in_top(max, ranks)] = i;
+    }
+  }
+
+  std::string temp{ "" };
+  for (const int& idx : max) {
+    temp += _ideas[idx] + "\n";
+  }
+
+  return temp;
+}
+
+void write_top(HANDLE& hPipeRead, std::vector<std::string>& _ideas, PCHAR& pSharedMem) {
+  std::vector<int> ranks(_ideas.size());
+
+  char temp_str[1000];
+  DWORD dwBytesReaden;
+  if (ReadFile(hPipeRead, temp_str, 1000, &dwBytesReaden, NULL)) {
+    temp_str[dwBytesReaden] = 0;
+    //std::cout << temp_str << "\n";
+    into_vector(temp_str, ranks);
+
+    std::string temp(show_top(_ideas, ranks));
+    temp.push_back(0);
+    const char* str = temp.c_str();
+    CopyMemory(pSharedMem + 1, str, strlen(str) + 1);
+  }
+}
+//--------------------------------------------------
