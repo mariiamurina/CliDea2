@@ -254,19 +254,26 @@ std::string show_top(std::vector<std::string>& _ideas, std::vector<int>& ranks) 
 }
 
 void write_top(HANDLE& hPipeRead, std::vector<std::string>& _ideas, PCHAR& pSharedMem) {
-  std::vector<int> ranks(_ideas.size());
+	std::vector<int> ranks(_ideas.size());
 
-  char temp_str[1000];
-  DWORD dwBytesReaden;
-  if (ReadFile(hPipeRead, temp_str, 1000, &dwBytesReaden, NULL)) {
-    temp_str[dwBytesReaden] = 0;
-    //std::cout << temp_str << "\n";
-    into_vector(temp_str, ranks);
+	char temp_str[1000];
+	DWORD dwBytesReaden;
+	if (ReadFile(hPipeRead, temp_str, 1000, &dwBytesReaden, NULL)) {
+		temp_str[dwBytesReaden] = 0;
+		// std::cout << temp_str << "\n";
+		into_vector(temp_str, ranks);
 
-    std::string temp(show_top(_ideas, ranks));
-    temp.push_back(0);
-    const char* str = temp.c_str();
-    CopyMemory(pSharedMem + 1, str, strlen(str) + 1);
-  }
+		std::string temp(show_top(_ideas, ranks));
+		temp.push_back(0);
+
+		// Запис результатів у файл result.txt
+		std::ofstream resultFile("result.txt", std::ios::app);
+		resultFile << temp;
+		resultFile.close();
+
+		const char* str = temp.c_str();
+		CopyMemory(pSharedMem + 1, str, strlen(str) + 1);
+	}
 }
+
 //--------------------------------------------------
