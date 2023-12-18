@@ -66,13 +66,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	/*char Buffer[1024] = "ya pominyav!!\n\n";
-	size_t szBuffer = sizeof(Buffer);
-	CopyMemory(lpBuffer, Buffer, szBuffer);
 
-	std::cout << "\n\n" << lpBuffer << "\n\t" << (strcmp(lpBuffer, "ya pominyav!!\n\n")) << "\n\n";*/
-
-	
 	Sleep(5000);
 
 	return 0;
